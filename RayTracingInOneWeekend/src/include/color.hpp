@@ -1,8 +1,6 @@
 #pragma once
 
-#include "vec3.hpp"
-
-#include <iostream>
+#include "rtweekend.hpp"
 
 // 定义vec3别名color
 using color = vec3;
