@@ -8,10 +8,10 @@
 color ray_color(const ray& r, const hittable& world) {
     hit_record rec;
     // 若场景中有物体与光线碰撞
-    if (world.hit(r, 0, infinity, rec)) {
+    if (world.hit(r, interval(0,infinity), rec)) {
         // 根据相交点的法线的分量都加1,移动到[0,2]区间，再索到0.5倍即[0,1]
         // 得出法线对应的颜色
-        return 0.5 * (rec.normal + color(1, 1, 1);
+        return 0.5 * (rec.normal + color(1, 1, 1));
     }
     // 把光线的方向归一化
     vec3 unit_direction = unit_vector(r.direction());

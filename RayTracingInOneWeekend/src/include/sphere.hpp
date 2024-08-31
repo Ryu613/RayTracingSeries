@@ -8,7 +8,7 @@ public:
     // 球面构造器:通过球心点坐标，和半径来构造
     sphere(const point3& center, double radius) : center(center), radius(std::fmax(0, radius)) {}
     // 重写抽象类的碰撞检测函数，与之前的hit_sphere函数大致相同
-    bool hit(const ray& r, double ray_tmin, double ray_tmax, hit_record& rec) const override {
+    bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
         vec3 oc = center - r.origin();
         auto a = r.direction().length_squared();
         auto h = dot(r.direction(), oc);
@@ -23,11 +23,11 @@ public:
         //根据tmin到tmax的区间，判断哪个根符合
         auto root = (h - sqrtd) / a;
         // 如果第一个根不在[tmin,tmax]范围
-        if (root <= ray_tmin || ray_tmax <= root) {
+        if (!ray_t.surrounds(root)) {
             // 在判断一下第二个跟是否在范围内
             root = (h + sqrtd) / a;
             // 若两个根都不在范围内，则判断为光线不与球面相交
-            if (root <= ray_tmin || ray_tmax <= root)
+            if (!ray_t.surrounds(root))
                 return false;
         }
         // 走到这里说明至少有1个根(值小的根优先)符合条件，填充碰撞结果

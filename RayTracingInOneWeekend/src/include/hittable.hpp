@@ -30,5 +30,5 @@ public:
     // 虚析构函数，不写就默认，否则由派生类实现
     virtual ~hittable() = default;
     // 碰撞检测函数，参数依次为:光线对象ray, tmin, tmax, 碰撞的信息(用来返回)
-    virtual bool hit(const ray& r, double ray_tmin, double ray_tmax, hit_record& rec) const = 0;
+    virtual bool hit(const ray& r, interval ray_t, hit_record& rec) const = 0;
 };
