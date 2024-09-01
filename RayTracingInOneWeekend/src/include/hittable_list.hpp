@@ -21,7 +21,7 @@ public:
     // 检测这些物体是否与光线碰撞，若有，则返回objects列表里的最后一个碰撞信息，并且返回true
     bool hit(const ray& r,interval ray_t, hit_record& rec) const override {
         hit_record temp_rec;
-        // 代表objects是否有物体与光线碰撞,目前初始化维false
+        // 代表objects是否有物体与光线碰撞,目前初始化为false
         bool hit_anything = false;
         // 代表目前最远的，与光线有碰撞的物体的时间t,目前初始化为tmax
         auto closest_so_far = ray_t.max;

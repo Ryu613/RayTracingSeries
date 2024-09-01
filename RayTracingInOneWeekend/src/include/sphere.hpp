@@ -6,7 +6,9 @@
 class sphere : public hittable {
 public:
     // 球面构造器:通过球心点坐标，和半径来构造
-    sphere(const point3& center, double radius) : center(center), radius(std::fmax(0, radius)) {}
+    sphere(const point3& center, double radius) : center(center), radius(std::fmax(0, radius)) {
+        // TODO: 材质的初始化
+    }
     // 重写抽象类的碰撞检测函数，与之前的hit_sphere函数大致相同
     bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
         vec3 oc = center - r.origin();
@@ -38,6 +40,7 @@ public:
         vec3 outward_normal = (rec.p - center) / radius;
         // 根据光线是从物体外部穿入还是内部穿出，来设置法线方向
         rec.set_face_normal(r, outward_normal);
+        rec.mat = mat;
         return true;
     }
 
@@ -46,4 +49,6 @@ private:
     point3 center;
     // 球面的半径
     double radius;
+    // 球面的材质
+    shared_ptr<material> mat;
 };

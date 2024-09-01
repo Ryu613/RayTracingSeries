@@ -14,6 +14,10 @@
 2. [光线追踪再搞一周](./RayTracingTheNextWeek/summary.md)
 3. [光线追踪搞一辈子](./RayTracingTheRestOfYourLife/summary.md)
 
+# 备注
+
+1. 没有图片的问题请下载以后再看
+
 
 ## 感谢原作者提供的精美教程(基于4.0版)
 [_Ray Tracing in One Weekend_](https://raytracing.github.io/books/RayTracingInOneWeekend.html)

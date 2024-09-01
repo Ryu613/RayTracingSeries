@@ -2,6 +2,9 @@
 
 #include "rtweekend.hpp"
 
+// 类前置声明，避免类循环依赖
+class material;
+
 // 用于记录光线与物体碰撞的信息
 class hit_record {
 public:
@@ -9,6 +12,7 @@ public:
     point3 p;
     // 碰撞点的法线向量
     vec3 normal;
+    shared_ptr<material> mat;
     // 光线的t(r = Q + td中的t),即何时碰撞到的
     double t;
     // 是否是正面(正面就是说光线是从物体外面碰到的)

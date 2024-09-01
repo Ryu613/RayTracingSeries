@@ -49,6 +49,24 @@ public:
 	double length_squared() const {
 		return e[0] * e[0] + e[1] * e[1] + e[2] * e[2];
 	}
+
+	//判断向量是否非常接近0向量
+	bool near_zero() const {
+		// 一个很小的接近0的数
+		auto s = 1e-8;
+		// 比较向量的各个分量，取绝对值后，都需要比这个s还小
+		return (std::fabs(e[0]) < s) && (std::fabs(e[1]) < s) && (std::fabs(e[2]) < s);
+	}
+
+
+	// 获取随机向量（用于模拟哑光材质）
+	static vec3 random() {
+		return vec3(random_double(), random_double(), random_double());
+	}
+	// 限定范围的随机向量
+	static vec3 random(double min, double max) {
+		return vec3(random_double(min, max), random_double(min, max), random_double(min, max));
+	}
 };
 // vec3别名
 using point3 = vec3;
@@ -103,4 +121,33 @@ inline vec3 cross(const vec3& u, const vec3& v) {
 // 取单位向量，即向量除以模
 inline vec3 unit_vector(const vec3& v) {
 	return v / v.length();
+}
+// 取随机球体内向量
+inline vec3 random_unit_vector() {
+	// 一直找寻合适的p点
+	while (true) {
+		// 先在边长为1的立方体范围内生成一个向量p
+		auto p = vec3::random(-1, 1);
+		// 求出向量p的模的平方(不开根为了计算更简单)
+		auto lensq = p.length_squared();
+		// 若p模的平方小于等于1，即这个点在球体面或内部
+		// 若p这个浮点数过于接近0，由于浮点数误差，会造成模算出来是0，会导致归一化后是正负无穷
+		// 为了避免这个问题，限制模的平方需要大于双精度浮点数的最小值
+		// 1e-160是经验得来的阈值，是一个极小的接近0的正数，并不是double本身的最小正数极限
+		if (1e-160 < lensq && lensq <= 1)
+			// 返回归一化的p向量
+			return p / sqrt(lensq);
+	}
+}
+
+// 取与法线同向的随机半球面向量p
+inline vec3 random_on_hemisphere(const vec3& normal) {
+	// 取出单位球面上随机均匀分布的向量p
+	vec3 on_unit_sphere = random_unit_vector();
+	// p点点乘法线向量，若大于0，则代表p与法线同向，即p在需要的半球面上
+	if (dot(on_unit_sphere, normal) > 0.0)
+		return on_unit_sphere;
+	// 若不在所需半球面，则反转向量就是了
+	else
+		return -on_unit_sphere;
 }
