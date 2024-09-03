@@ -5,13 +5,19 @@
 #include "hittable.hpp"
 #include "material.hpp"
 
-class camera_rt {
+class camera_rt2 {
 public:
     double aspect_ratio = 1.0; //图像宽高比
     int image_width = 100; // 图像的宽(像素个数)
     int samples_per_pixel = 10; // 每个像素点的采样点的个数
     int max_depth = 10; // 最大反射光线的次数
     double vfov = 90; // 垂直视场角90°
+    point3 lookfrom = point3(0, 0, 0);   // 相机从哪看（相机中心点）
+    point3 lookat = point3(0, 0, -1);  // 相机看哪里（相机看向哪个点）
+    vec3   vup = vec3(0, 1, 0);     // 相机的上方是哪个方向
+    double defocus_angle = 0;  // 失焦的角度(类似fov角)
+    double focus_dist = 10;    // 从相机中心到焦距所在平面的距离
+
 
     void render(const hittable& world) {
         initialize();
@@ -44,6 +50,9 @@ private:
     point3 pixel00_loc;    // 视口里第一个像素点的位置
     vec3   pixel_delta_u;  // 视口水平方向相邻像素点的间隔距离
     vec3   pixel_delta_v;  // 视口垂直方向相邻像素点的间隔距离
+    vec3   u, v, w;              // 相机的右上前定义，注意w与看向的方向相反(右手坐标系)
+    vec3   defocus_disk_u;       // 失焦的圆盘水平半径
+    vec3   defocus_disk_v;       // 失焦的圆盘垂直半径
 
     // 初始化操作
     void initialize() {
@@ -52,25 +61,33 @@ private:
         image_height = (image_height < 1) ? 1 : image_height;
 
         pixel_samples_scale = 1.0 / samples_per_pixel;
-
-        // 相机中心
-        center = point3(0, 0, 0);
+        // 定义相机中点
+        center = lookfrom;
 
         // 定义焦距,即相机离视口中心点的距离
-        auto focal_length = 1.0;
+        // 焦距计算不要了
+        // auto focal_length = (lookfrom - lookat).length();
         // 角度转弧度
         auto theta = degrees_to_radians(vfov);
         // 视口在z=-1，所以视口上边缘高度在tan(90/2)
         auto h = std::tan(theta / 2);
         // 视口的高度
-        auto viewport_height = 2 * h * focal_length;
+        // auto viewport_height = 2 * h * focal_length;
+        auto viewport_height = 2 * h * focus_dist;
         // 视口的宽度
         auto viewport_width = viewport_height * (double(image_width) / image_height);
 
-        // 定义视口的水平向量u
-        auto viewport_u = vec3(viewport_width, 0, 0);
-        // 定义视口的垂直向量v（与y轴相反所以取负）
-        auto viewport_v = vec3(0, -viewport_height, 0);
+        // 计算相机上，右，前的向量
+        // w是反的
+        w = unit_vector(lookfrom - lookat);
+        // 用叉乘求与vup和w相垂直的向量
+        u = unit_vector(cross(vup, w));
+        // 用叉乘求与w,u垂直的向量
+        v = cross(w, u);
+        // 视口水平方向的长度的向量
+        vec3 viewport_u = viewport_width * u;
+        // 视口垂直方向的长度的向量(方向是从上往下)
+        vec3 viewport_v = viewport_height * -v;
 
         // 视口水平向量u除以图像宽度得到像素点间的水平距离delta u
         pixel_delta_u = viewport_u / image_width;
@@ -78,11 +95,19 @@ private:
         pixel_delta_v = viewport_v / image_height;
 
         // 计算出视口左上角点Q的位置
-        // 相机中心位置 -> 往-z方向移动焦距的距离(视口位置) -> 往视口水平方向的左侧移动一半的向量u的距离 -> 往视口垂直方向的上方移动一般的向量v的距离
-        auto viewport_upper_left = center
-            - vec3(0, 0, focal_length) - viewport_u / 2 - viewport_v / 2;
+        // 相机中心位置 -> 往-z方向(w)移动焦距距离 -> 往左移动一半的视口水平距离， 往上移动视口一般的垂直距离
+        // auto viewport_upper_left = center - (focal_length * w) - viewport_u / 2 - viewport_v / 2;
+        auto viewport_upper_left = center - (focus_dist * w) - viewport_u / 2 - viewport_v / 2;
         // p(0,0)像素点位置：即Q点位置+像素点的水平距离与垂直距离的和的一半
         pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+        // 计算相机失焦圆盘的基本向量
+        // 失焦半径计算，焦点距离*tan(失焦角度/2)
+        auto defocus_radius = focus_dist * std::tan(degrees_to_radians(defocus_angle / 2));
+        // 求出失焦圆盘水平半径
+        defocus_disk_u = u * defocus_radius;
+        // 求出失焦圆盘垂直半径
+        defocus_disk_v = v * defocus_radius;
     }
 
     // 根据行列里的第几个像素点，取出采样点的光线
@@ -95,8 +120,9 @@ private:
         auto pixel_sample = pixel00_loc
             + ((i + offset.x()) * pixel_delta_u)
             + ((j + offset.y()) * pixel_delta_v);
-        // 光线的原点，就是相机中心
-        auto ray_origin = center;
+        // 光线的原点，若失焦角小于等于0(就是光线直接打到焦距点上)，视为相机中心发出的光
+        // 否则，视为圆盘上随机一点发出的光
+        auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
         // 光线的方向，就是这个采样点的向量 - 光线的原点
         auto ray_direction = pixel_sample - ray_origin;
         // 构造出一个光线ray对象
@@ -107,6 +133,14 @@ private:
     vec3 sample_square() const {
         // x,y的值在[-0.5,0.5)区间（不包括0.5）
         return vec3(random_double() - 0.5, random_double() - 0.5, 0);
+    }
+
+    // 失焦圆盘采样
+    point3 defocus_disk_sample() const {
+        // 从单位圆盘上取出随机点p
+        auto p = random_in_unit_disk();
+        // 这条光在相机中心的基础上，在水平和垂直圆盘半径内，做随机偏移
+        return center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
     }
 
     // 获得光线的颜色结果

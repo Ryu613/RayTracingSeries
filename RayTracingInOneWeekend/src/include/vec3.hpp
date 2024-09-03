@@ -151,3 +151,33 @@ inline vec3 random_on_hemisphere(const vec3& normal) {
 	else
 		return -on_unit_sphere;
 }
+
+// 入射光向量v，法线向量n，求反射向量
+// 即v+2b=v+2(-(v·n)n)
+inline vec3 reflect(const vec3& v, const vec3& n) {
+	return v - 2 * dot(v, n) * n;
+}
+//折射函数，给出入射光向量uv, 法线n，η/η'的比值
+inline vec3 refract(const vec3& uv, const vec3& n, double etai_over_etat) {
+	// dot(-uv,n)求cosθ，uv的负号是由于要与法线方向一致
+	// 用fmin是因为防止浮点数误差导致的点乘结果略微大于1
+	auto cos_theta = std::fmin(dot(-uv, n), 1.0);
+	// 折射光线的垂直分量，这里是uv+...是因为n与uv的平行分量方向相反
+	vec3 r_out_perp = etai_over_etat * (uv + cos_theta * n);
+	// 折射光线的水平分量，与之前推导公式一致
+	vec3 r_out_parallel = -std::sqrt(std::fabs(1.0 - r_out_perp.length_squared())) * n;
+	// 水平分量 + 垂直分量即为折射光线的向量
+	return r_out_perp + r_out_parallel;
+}
+
+// 从圆盘区域选一个随机点
+inline vec3 random_in_unit_disk() {
+	// 直到选到圆盘里面的点为止
+	while (true) {
+		// 从[-1,1)中选点(x,y,0)
+		auto p = vec3(random_double(-1, 1), random_double(-1, 1), 0);
+		// 若这个点的模小于1(即在单位圆盘里)，则返回这个点
+		if (p.length_squared() < 1)
+			return p;
+	}
+}

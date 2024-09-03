@@ -5,10 +5,9 @@
 // hittable的派生类：球面
 class sphere : public hittable {
 public:
-    // 球面构造器:通过球心点坐标，和半径来构造
-    sphere(const point3& center, double radius) : center(center), radius(std::fmax(0, radius)) {
-        // TODO: 材质的初始化
-    }
+    // 球面构造器:通过球心点坐标，和半径,加上材质来构造
+    sphere(const point3& center, double radius, shared_ptr<material> mat)
+        : center(center), radius(std::fmax(0, radius)), mat(mat) {}
     // 重写抽象类的碰撞检测函数，与之前的hit_sphere函数大致相同
     bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
         vec3 oc = center - r.origin();
