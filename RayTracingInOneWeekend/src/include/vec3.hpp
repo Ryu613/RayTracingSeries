@@ -126,7 +126,7 @@ inline vec3 unit_vector(const vec3& v) {
 inline vec3 random_unit_vector() {
 	// 一直找寻合适的p点
 	while (true) {
-		// 先在边长为1的立方体范围内生成一个向量p
+		// 先在边长为2的立方体范围内生成一个向量p
 		auto p = vec3::random(-1, 1);
 		// 求出向量p的模的平方(不开根为了计算更简单)
 		auto lensq = p.length_squared();

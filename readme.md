@@ -10,15 +10,16 @@
 2. 高数(积分，空间几何，线性代数，概率论与统计)至少达到了解的程度
 
 ## 篇章跳转
-1. [2天搞定光线追踪](./RayTracingInOneWeekend/summary.md)
+1. [一个周末搞定光线追踪](./RayTracingInOneWeekend/summary.md)
 2. [光线追踪再搞一周](./RayTracingTheNextWeek/summary.md)
 3. [光线追踪搞一辈子](./RayTracingTheRestOfYourLife/summary.md)
 
 # 备注
 
-1. 没有图片的问题请下载以后再看
-2. 认真学的话，第一部分大概率不止2天，坚持学下去就好
+1. github上第一章预览图片不显示，请下载后再看
 
 
 ## 感谢原作者提供的精美教程(基于4.0版)
 [_Ray Tracing in One Weekend_](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
+[_Ray Tracing: The Next Week_](https://raytracing.github.io/books/RayTracingTheNextWeek.html)
+[_Ray Tracing: The Rest of Your Life_](https://raytracing.github.io/books/RayTracingTheRestOfYourLife.html)
